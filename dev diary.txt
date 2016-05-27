@@ -1,0 +1,80 @@
+
+================  VYZYX20  =================
+
+=== DEVELOPMENTAL DIARY OF THE DEVELOPER ===
+
+======  PUKE7 aka LANGEL BOOKBINDER  =======
+
+
+
+
+
+2015.05.10
+
+
+== EXPOSITION ==
+
+I woke up on a Saturday and had some fire up my ass to start making a VIC20 game.  I've been sitting with a couple game ideas for several years, but this, of course, is neither of those.  I once watched some youtube video that displayed countless VIC20 titles wherein I witnessed a shmup (shoot 'em up) side scroller that used character spaces rather than the hi-res method.  Although I only saw 5 seconds of gameplay, it really stuck with me as a really nice simplification in the ways of programming graphics for this machine.  The VIC20 has no way to natively handle sprites in it's hardware unlike later 6502 machines such as it's succesor the Commodore 64 and the Nintendo Entertainment System.
+
+While I'd like to say my 6502 Assembly chops (or any asm for that matter) are merely rusty, the truth is that they were probably never that strong in the first place.  I did some x86 VGA crap in the early '90s for fun.  I finally did my first VIC20 (or 8bit) asm in the mid '00s which is nothing more than reading the paddles and having them control the audio.  I've done some music play routines with simple raster bar shenanigans, BUT A GAME?!?!  Maybe in basic.  Maybe when I was 12.  Maybe they weren't even games but a menu system that lets you see various crappy animations disguised as a game.
+
+Like I said, I got a fire up my ass.  This is a chance for me to quit being academic about what I would do if I spent the time with the first cornputer my family owned.  This, for me, is an ultimate level of taking control over a nostalgia or something.... I'm not a poet!  Let's code!!
+
+
+++ TOOLS ++
+win7 environ
+gVim, DASM, VICE
+
+
+== HIGH LEVEL ENGINE DESIGN DECISIONS ==
+everything moves by character space not by pixels
+map movement is side to side
+playfield width is max of screen
+playfield height limited by 512 characters and width
+do the little bits to make it both NTSC and PAL ready
+disable all interrupts
+UNEXPANDED VIC!@!@!!!
+
+
+== THE SCROLLING STARFIELD ==
+
+Nine hours into that Saturday I had finally both figured out the dimensions of the playfield (for both PAL & NTSC) and I had 19 twinkling objects flying across the screen from left to right all at their own speeds.  9 HOURS?!?!?  Wow.  I thought I would already be controlling something on the screen by now.  Cripes.  It was still rather shit too.  Many frames were taking a frame and a half to draw.  That means those frames sit there twice as long and makes the movement's velocity jitter.  Yuck.  
+
+My bottleneck was clearing the screen before drawing the objects (512 bytes).  If I have the objects clean themselves off the screen only when they move it saves considerable CPU cycles.  Combine that with various other optimizations I found over a 4 hour block.  I have the dang starfield paralax scrolling at 60fps looking the way I want it to.  HUZZAR!!  It's managing all this in under half a frame.  If I can find a way to make it even faster I'll be able to have a lot of action on screen.  I can always cut down on stars too.
+
+
+
+
+
+2015.05.12
+
+
+== HIGH LEVEL ENGINE DESIGN DECISIONS ==
+custom keyboard scanner faster than kernel
+zero page ram for all/most game memory
+
+
+== THE GODAMN FOKKING KEYBOARD SCANNER SHIT ==
+
+The easiest way to read the keyboard in VIC20 assembly is call the kernel keyboard scan routine.  This thing manages a keyboard buffer, handles the wait between key repeats, a few other things, and then finally puts a single value in a specific spot on the zero page.  That value only tells you of the key being pressed with the highest value.  Since I'm trying to optimize for speed and I'm only using WASD and SPACE for user controls, I decided to write my own keyboard scanner function.  It took roughly 2 hours of reading and 3 hours of fiddling before I had what I wanted.  A couple keys overlap in the keyboard matrix in a way that I can only detect one of them if both are pressed, but, for the most part, the player will be able to steer and fire at the same time which wasn't possible using the kernel function with all it's bloat.  The scanner puts a byte in ram that tells me bitwise what keys are pressed like so --
+
+bit 7 : any key on keyboard is pressed
+bits 5 & 6 are presently unused
+bit 4 : spacebar
+bit 3 : w
+bit 2 : a
+bit 1 : s
+bit 0 : d
+
+== TO THE COMPLETE ZERO PAGE ACCESS ==
+
+With the keyboard scanner I now have absolutely no use for BASIC or KERNEL ROM routines.  This also means that any of the space they used is free for my game including the Zero Page, Page 2 and Page 3.  There's a space called 'cassette buffer' at $033c-$03ff used only when loading.  My game isn't going to load shit.  So I was using that space, but I moved all that stuff to the Zero Page.  Accessing the ZP uses slightly less CPU cycles than the rest of the RAM stack.  It wasn't quite the optimization I was hoping for.  It looks like somewhere around 5%.  My starfield is just too bad ass yo!  I think I have enough cycles left to handle sound, a player, a few enemies and about 10 missiles.  We shall see!
+
+
+
+2016.05.26
+
+
+Holy shit it's been over a year since I fiddled with this thing!
+
+Not much to report besides I'm finally using cygwin to improve my dev environment.  I can edit files in vim and compile on the command line in a single window using tmux.  Also, now introducing, version control with git!
